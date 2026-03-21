@@ -16,7 +16,7 @@ class Album:
         self.tracks = []
 
     def add_track(self, track):
-        pass
+        self.tracks.append(track)
 
     def track_ids(self):
         pass
