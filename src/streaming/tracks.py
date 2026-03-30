@@ -31,7 +31,7 @@ class Song(Track):
         self.artist = artist
 
 class AlbumTrack(Song):
-    def __init__(self, track_id, title, duration_seconds, genre, artist, track_number, album):
+    def __init__(self, track_id, title, duration_seconds, genre, artist, track_number, album=None):
         Song.__init__(self, track_id, title, duration_seconds, genre, artist)
         self.track_number = track_number
         self.album = album
@@ -42,7 +42,7 @@ class SingleRelease(Song):
         self.release_date = release_date
 
 class Podcast(Track):
-    def __init__(self, track_id, title, duration_seconds, genre, host, description):
+    def __init__(self, track_id, title, duration_seconds, genre, host, description=""):
         Track.__init__(self, track_id, title, duration_seconds, genre)
         self.host = host
         self.description = description

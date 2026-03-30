@@ -7,10 +7,10 @@ and provides query methods for analytics.
 Classes to implement:
   - StreamingPlatform
 """
+from _pyrepl.commands import end
+from datetime import datetime, timedelta #found this on google to track current time and date
 
 
-
-#PRIDAT QUERY METHODS Q1 ATD Z README
 
 class StreamingPlatform:
     def __init__(self, name):
@@ -67,14 +67,35 @@ class StreamingPlatform:
 
     #METHODS
 
-    #Q1
+    #Q1 DONE!
     def total_listening_time_minutes(self,start,end):
+        total_listened_min_app = 0
         for session in self._session:
-            pass
+            if start <= session.timestamp <= end:
+                total_listened_min_app += session.duration_listened_seconds
+        return total_listened_min_app/60
 
-    #Q2
+    #Q2 DONE!
     def avg_unique_tracks_per_premium_user(self, days=30):
-        pass
+        from users import PremiumUser
+        premium_users = []
+
+        for user in self._users.values():
+            if isinstance(user, PremiumUser):
+                premium_users.append(user)
+
+        start_date = datetime.now() - timedelta(days=days)
+        total_unique_tracks = 0
+        for user in premium_users:
+            unique_tracks = []
+            for session in user.sessions:
+                if start_date <= session.timestamp and session.track.track_id not in unique_tracks:
+                    unique_tracks.append(session.track.track_id)
+            total_unique_tracks += len(unique_tracks)
+
+        return total_unique_tracks/len(premium_users)
+
+
 
     #Q3..
     def track_with_most_distinct_listeners(self):
@@ -107,6 +128,8 @@ class StreamingPlatform:
     #Q10
     def users_who_completed_albums(self):
         pass
+
+
 
 spotify = StreamingPlatform("Spotify")
 
