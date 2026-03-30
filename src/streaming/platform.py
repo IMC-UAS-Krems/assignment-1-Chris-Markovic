@@ -70,6 +70,7 @@ class StreamingPlatform:
     #Q1
     def total_listening_time_minutes(self,start,end):
         for session in self._session:
+            pass
 
     #Q2
     def avg_unique_tracks_per_premium_user(self, days=30):
