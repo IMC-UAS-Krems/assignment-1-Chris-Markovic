@@ -23,37 +23,44 @@ class Track:
         self.genre = genre
 
     def duration_minutes(self):
-        pass
+        return float(self.duration_seconds / 60)
 
 class Song(Track):
-    def __init__(self, artist):
+    def __init__(self,track_id, title, duration_seconds, genre, artist):
+        Track.__init__(self, track_id, title, duration_seconds, genre)
         self.artist = artist
 
 class AlbumTrack(Song):
-    def __init__(self, track_number, album):
+    def __init__(self, track_id, title, duration_seconds, genre, artist, track_number, album):
+        Song.__init__(self, track_id, title, duration_seconds, genre, artist)
         self.track_number = track_number
         self.album = album
 
 class SingleRelease(Song):
-    def __init__(self, release_date):
+    def __init__(self, track_id, title, duration_seconds, genre, artist, release_date):
+        Song.__init__(self, track_id, title, duration_seconds, genre, artist)
         self.release_date = release_date
 
 class Podcast(Track):
-    def __init__(self, host, description):
+    def __init__(self, track_id, title, duration_seconds, genre, host, description):
+        Track.__init__(self, track_id, title, duration_seconds, genre)
         self.host = host
         self.description = description
 
 class NarrativeEpisode(Podcast):
-    def __init__(self,season, episode_number):
+    def __init__(self, track_id, title, duration_seconds, genre, host, description, season, episode_number):
+        Podcast.__init__(self, track_id, title, duration_seconds, genre, host, description)
         self.season = season
         self.episode_number = episode_number
 
 class InterviewEpisode(Podcast):
-    def __init__(self, guest):
+    def __init__(self,track_id, title, duration_seconds, genre, host, description, guest):
+        Podcast.__init__(self, track_id, title, duration_seconds, genre, host, description)
         self.guest = guest
 
 class AudiobookTrack(Track):
-    def __init__(self, author, narrator):
+    def __init__(self,track_id, title, duration_seconds, genre, author, narrator):
+        Track.__init__(self, track_id, title, duration_seconds, genre)
         self.author = author
         self.narrator = narrator
 

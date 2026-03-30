@@ -16,20 +16,25 @@ class Playlist:
         self.tracks = []
 
     def add_track(self,track):
-        pass
+        self.tracks.append(track)
 
     def remove_track(self,track_id):
-        pass
+        self.tracks.remove(track_id)
 
     def total_duration_seconds(self):
-        pass
+        total_duration_seconds = 0
+        for track in self.tracks:
+            total_duration_seconds += track.duration_seconds
+        return total_duration_seconds
+
 
 class CollaborativePlaylist(Playlist):
-    def __init__(self, contributors):
-        self.contributors = []
+    def __init__(self, playlist_id, name, owner, contributors=[]):
+        Playlist.__init__(self, playlist_id, name, owner, tracks=[])
+        self.contributors = contributors
 
     def add_contributor(self, user):
-        pass
+        self.contributors.append(user)
 
     def remove_contributor(self, user):
-        pass
+        self.contributors.remove(user)

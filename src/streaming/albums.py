@@ -19,7 +19,13 @@ class Album:
         self.tracks.append(track)
 
     def track_ids(self):
-        pass
-
+        ids = []
+        for track in self.tracks:
+            ids.append(track.track_id)
+        return ids
     def duration_seconds(self):
-        pass
+        total_duration = 0
+        for track in self.tracks:
+            total_duration += track.duration_seconds
+        return total_duration
+
