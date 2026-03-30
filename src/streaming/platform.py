@@ -76,7 +76,7 @@ class StreamingPlatform:
     def avg_unique_tracks_per_premium_user(self, days=30):
         pass
 
-    #Q3.
+    #Q3..
     def track_with_most_distinct_listeners(self):
         pass
 
