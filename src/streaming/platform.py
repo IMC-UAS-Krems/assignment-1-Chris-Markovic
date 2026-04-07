@@ -8,14 +8,14 @@ Classes to implement:
   - StreamingPlatform
 """
 from _pyrepl.commands import end
-from datetime import datetime, timedelta #found this on google to track current time and date
+from datetime import datetime, timedelta #found this on google to track current time and date: https://www.geeksforgeeks.org/python/python-datetime-timedelta-function/
 
 
 
 class StreamingPlatform:
     def __init__(self, name):
         self.name = name
-        self._catalogue = {} #Tracks
+        self._catalogue = {} #dictionary with tracks
         self._users = {}
         self._artists = {}
         self._albums = {}
@@ -84,7 +84,7 @@ class StreamingPlatform:
             if isinstance(user, PremiumUser):
                 premium_users.append(user)
 
-        start_date = datetime.now() - timedelta(days=days)
+        start_date = datetime.now() - timedelta(days=days)  #found on google, link on line 11 next to import
         total_unique_tracks = 0
         for user in premium_users:
             unique_tracks = []
