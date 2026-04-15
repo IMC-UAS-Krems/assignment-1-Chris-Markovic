@@ -28,7 +28,7 @@ class User:
             listening_seconds += session.duration_listened_seconds
         return listening_seconds
 
-    def total_listened_minutes(self):
+    def total_listening_minutes(self):
         return self.total_listening_seconds()/60
 
     def unique_tracks_listened(self):

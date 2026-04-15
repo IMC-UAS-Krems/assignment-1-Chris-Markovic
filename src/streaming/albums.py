@@ -19,7 +19,8 @@ class Album:
 
     def add_track(self, track):
         track.album = self
-        self.tracks.append(track)
+        if track.track_id not in self.tracks:
+            self.tracks.append(track)
 
     def track_ids(self):
         ids = []

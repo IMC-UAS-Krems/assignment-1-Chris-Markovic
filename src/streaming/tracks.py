@@ -22,6 +22,7 @@ class Track:
         self.duration_seconds = duration_seconds
         self.genre = genre
 
+
     def duration_minutes(self):
         return float(self.duration_seconds / 60)
 
