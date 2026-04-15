@@ -21,7 +21,10 @@ class Track:
         self.title = title
         self.duration_seconds = duration_seconds
         self.genre = genre
-
+    def __eq__(self, other):
+        if not isinstance(other, Track):
+            return False
+        return self.track_id == other.track_id
 
     def duration_minutes(self):
         return float(self.duration_seconds / 60)
@@ -49,13 +52,13 @@ class Podcast(Track):
         self.description = description
 
 class NarrativeEpisode(Podcast):
-    def __init__(self, track_id, title, duration_seconds, genre, host, description, season, episode_number):
+    def __init__(self, track_id, title, duration_seconds, genre, host, season, episode_number, description=""):
         Podcast.__init__(self, track_id, title, duration_seconds, genre, host, description)
         self.season = season
         self.episode_number = episode_number
 
 class InterviewEpisode(Podcast):
-    def __init__(self,track_id, title, duration_seconds, genre, host, description, guest):
+    def __init__(self,track_id, title, duration_seconds, genre, host, guest, description=""):
         Podcast.__init__(self, track_id, title, duration_seconds, genre, host, description)
         self.guest = guest
 

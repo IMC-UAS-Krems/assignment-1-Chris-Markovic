@@ -8,28 +8,24 @@ Classes to implement:
 """
 
 class Album:
-    def __init__(self, album_id, title, artist, release_year, tracks=[]):
+    def __init__(self, album_id, title, artist, release_year, tracks=None):
         if tracks is None:
             tracks = []
         self.album_id = album_id
         self.title = title
         self.artist = artist
         self.release_year = release_year
-        self.tracks = tracks
+        self.tracks = tracks if tracks is not None else []
 
     def add_track(self, track):
         track.album = self
         if track.track_id not in self.tracks:
             self.tracks.append(track)
+            self.tracks.sort(key=lambda t: t.track_number)
 
     def track_ids(self):
-        ids = []
-        for track in self.tracks:
-            ids.append(track.track_id)
-        return ids
+        return {track.track_id for track in self.tracks}
+
     def duration_seconds(self):
-        total_duration = 0
-        for track in self.tracks:
-            total_duration += track.duration_seconds
-        return total_duration
+        return sum(track.duration_seconds for track in self.tracks)
 

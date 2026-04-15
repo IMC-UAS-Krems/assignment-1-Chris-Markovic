@@ -16,7 +16,8 @@ class Playlist:
         self.tracks = tracks if tracks is not None else []
 
     def add_track(self,track):
-        self.tracks.append(track)
+        if track not in self.tracks:
+            self.tracks.append(track)
 
     def remove_track(self,track_id):
         for track in self.tracks:
@@ -37,7 +38,8 @@ class CollaborativePlaylist(Playlist):
         self.contributors = [owner]
 
     def add_contributor(self, user):
-        self.contributors.append(user)
+        if user not in self.contributors:
+            self.contributors.append(user)
 
     def remove_contributor(self, user):
         if user != self.owner and user in self.contributors:
