@@ -23,7 +23,7 @@ from datetime import datetime, timedelta
 from streaming.platform import StreamingPlatform
 from streaming.users import FreeUser, PremiumUser, FamilyAccountUser, FamilyMember
 from streaming.playlists import CollaborativePlaylist
-from tests.conftest import FIXED_NOW, RECENT, OLD
+from conftest import FIXED_NOW, RECENT, OLD
 
 
 # ===========================================================================
@@ -55,7 +55,13 @@ class TestTotalListeningTime:
     # TODO: Add a test that verifies the correct value for a known time period.
     #       Calculate the expected total based on the fixture data in conftest.py.
     def test_known_period_value(self, platform: StreamingPlatform) -> None:
-        pass
+        start = RECENT - timedelta(days=1)
+        end = FIXED_NOW
+        result = platform.total_listening_time_minutes(start, end)
+
+        expected_seconds = sum(s.duration_listened_seconds for s in platform._session
+                               if start <= s.timestamp <= end)
+        assert result == float(expected_seconds / 60)
 
 
 # ===========================================================================
@@ -86,7 +92,22 @@ class TestAvgUniqueTracksPremium:
     #       average for premium users. You'll need to count unique tracks
     #       per premium user and calculate the average.
     def test_correct_value(self, platform: StreamingPlatform) -> None:
-        pass
+        from streaming.users import PremiumUser
+        days = 30
+        cutoff = FIXED_NOW - timedelta(days=days)
+
+        premium_users = [u for u in platform._users.values() if isinstance(u, PremiumUser)]
+        if not premium_users:
+            assert platform.avg_unique_tracks_per_premium_user(days) == 0.0
+            return
+
+        total_unique = 0
+        for user in premium_users:
+            unique_tracks = {s.track.track_id for s in user.sessions if s.timestamp >= cutoff}
+            total_unique += len(unique_tracks)
+
+        expected = total_unique / len(premium_users)
+        assert platform.avg_unique_tracks_per_premium_user(days) == expected
 
 
 # ===========================================================================
@@ -110,7 +131,19 @@ class TestTrackMostDistinctListeners:
     # TODO: Add a test that verifies the correct track is returned.
     #       Count listeners per track from the fixture data.
     def test_correct_track(self, platform: StreamingPlatform) -> None:
-        pass
+        listener_counts = {}
+        for session in platform._session:
+            track_id = session.track.track_id
+            if track_id not in listener_counts:
+                listener_counts[track_id] = set()
+            listener_counts[track_id].add(session.user.user_id)
+
+        if not listener_counts:
+            assert platform.track_with_most_distinct_listeners() is None
+        else:
+            best_track_id = max(listener_counts, key=lambda trackid: len(listener_counts[trackid]))
+            result = platform.track_with_most_distinct_listeners()
+            assert result.track_id == best_track_id
 
 
 # ===========================================================================
@@ -142,7 +175,14 @@ class TestAvgSessionDurationByType:
 
     # TODO: Add tests to verify all user types are present and have correct averages.
     def test_all_user_types_present(self, platform: StreamingPlatform) -> None:
-        pass
+        result = platform.avg_session_duration_by_user_type()
+        type_names = []
+        for item in result:
+            type_names.append(item[0])
+
+        types = {"FreeUser", "PremiumUser", "FamilyAccountUser", "FamilyMember"}
+        for type in type_names:
+            assert type in types
 
 
 # ===========================================================================
@@ -171,10 +211,20 @@ class TestUnderageSubUserListening:
 
     # TODO: Add tests for correct values with default and custom thresholds.
     def test_correct_value_default_threshold(self, platform: StreamingPlatform) -> None:
-        pass
+        from streaming.users import FamilyMember
+        total_seconds = 0
+        for user in platform._users.values():
+            if isinstance(user, FamilyMember) and user.age < 18:
+                total_seconds += sum(s.duration_listened_seconds for s in user.sessions)
+        assert platform.total_listening_time_underage_sub_users_minutes() == float(total_seconds / 60)
 
     def test_custom_threshold(self, platform: StreamingPlatform) -> None:
-        pass
+        from streaming.users import FamilyMember
+        total_seconds = 0
+        for user in platform._users.values():
+            if isinstance(user, FamilyMember) and user.age < 25:
+                total_seconds += sum(s.duration_listened_seconds for s in user.sessions)
+        assert platform.total_listening_time_underage_sub_users_minutes(age_threshold=25) == float(total_seconds / 60)
 
 
 # ===========================================================================
@@ -213,8 +263,16 @@ class TestTopArtistsByListeningTime:
 
     # TODO: Add a test that verifies the correct artists and values.
     def test_top_artist(self, platform: StreamingPlatform) -> None:
-        pass
+        from streaming.tracks import Song
+        top_artists = {}
+        for session in platform._session:
+            if isinstance(session.track, Song):
+                artist = session.track.artist
+                top_artists[artist] = top_artists.get(artist, 0) + (session.duration_listened_minutes())
 
+        if top_artists:
+            best_artist = max(top_artists, key=top_artists.get)
+            assert best_artist == platform.top_artists_by_listening_time(n=1)
 
 # ===========================================================================
 # Q7 - User's top genre and percentage
@@ -250,7 +308,24 @@ class TestUserTopGenre:
 
     # TODO: Add a test that verifies the correct genre and percentage for a known user.
     def test_correct_top_genre(self, platform: StreamingPlatform) -> None:
-        pass
+        user_id = "user1"
+        user = platform._users.get(user_id)
+        if not user or not user.sessions:
+            assert platform.user_top_genre(user_id) is None
+            return
+
+        genre_times = {}
+        total_time = 0
+        for session in user.sessions:
+            genre = session.track.genre
+            genre_times[genre] = genre_times.get(genre, 0) + session.duration_listened_seconds
+            total_time += session.duration_listened_seconds
+        top_genre = max(genre_times, key=genre_times.get)
+        expected_percentage = (genre_times[top_genre] / total_time) * 100
+
+        genre, percentage = platform.user_top_genre(user_id)
+        assert genre == top_genre
+        assert percentage == expected_percentage
 
 
 # ===========================================================================
@@ -285,9 +360,18 @@ class TestCollaborativePlaylistsManyArtists:
     # TODO: Add tests that verify the correct playlists are returned with
     #       different threshold values.
     def test_default_threshold(self, platform: StreamingPlatform) -> None:
-        pass
+        from streaming.playlists import CollaborativePlaylist
+        from streaming.tracks import Song
 
+        result_for_5 = platform.collaborative_playlists_with_many_artists(threshold=5)
+        for playlist in result_for_5:
+            artists_5 = {track.artist.artist for track in playlist.tracks if isinstance(track, Song)}
+            assert len(artists_5) > 5
 
+        result_for_10 = platform.collaborative_playlists_with_many_artists(threshold=10)
+        for playlist in result_for_10:
+            artists_10 = {track.artist.artist for track in playlist.tracks if isinstance(track, Song)}
+            assert len(artists_10) > 10
 # ===========================================================================
 # Q9 - Average tracks per playlist type
 # ===========================================================================
@@ -313,13 +397,22 @@ class TestAvgTracksPerPlaylistType:
 
     # TODO: Add tests that verify the correct averages for each playlist type.
     def test_standard_playlist_average(self, platform: StreamingPlatform) -> None:
-        pass
+        from streaming.playlists import Playlist
+        standard_playlists = [p for p in platform._playlists.values() if type(p) is Playlist]
+        if not standard_playlists:
+            assert platform.avg_tracks_per_playlist_type()["Playlist"] == 0.0
+        else:
+            total_tracks = sum(len(p.tracks) for p in standard_playlists)
+            assert platform.avg_tracks_per_playlist_type()["Playlist"] == total_tracks / len(standard_playlists)
 
-    def test_collaborative_playlist_average(
-        self, platform: StreamingPlatform
-    ) -> None:
-        pass
-
+    def test_collaborative_playlist_average(self, platform: StreamingPlatform) -> None:
+        from streaming.playlists import CollaborativePlaylist
+        collaborative_playlists = [p for p in platform._playlists.values() if type(p) is CollaborativePlaylist]
+        if not collaborative_playlists:
+            assert platform.avg_tracks_per_playlist_type()["CollaborativePlaylist"] == 0.0
+        else:
+            total_tracks = sum(len(p.tracks) for p in collaborative_playlists)
+            assert platform.avg_tracks_per_playlist_type()["CollaborativePlaylist"] == total_tracks / len(collaborative_playlists)
 
 # ===========================================================================
 # Q10 - Users who completed at least one full album
@@ -354,7 +447,34 @@ class TestUsersWhoCompletedAlbums:
 
     # TODO: Add tests that verify the correct users and albums are identified.
     def test_correct_users_identified(self, platform: StreamingPlatform) -> None:
-        pass
+        result = platform.users_who_completed_albums()
+        expected_user_ids = []
+
+        for user in platform._users.values():
+            listened_track_ids = {s.track.track_id for s in user.sessions}
+            completed_at_least_one = False
+            for album in platform._albums.values():
+                if not album.tracks:
+                    continue
+                album_track_ids = {t.track_id for t in album.tracks}
+                if album_track_ids.issubset(listened_track_ids):
+                    completed_at_least_one = True
+                    break
+            if completed_at_least_one:
+                expected_user_ids.append(user.user_id)
+
+        actual_user_ids = [user.user_id for user, albums in result]
+        assert set(actual_user_ids) == set(expected_user_ids)
 
     def test_correct_album_titles(self, platform: StreamingPlatform) -> None:
-        pass
+        result = platform.users_who_completed_albums()
+
+        for user, album_titles in result:
+            listened_track_ids = {s.track.track_id for s in user.sessions}
+
+            for title in album_titles:
+                album = next((a for a in platform._albums.values() if a.title == title), None)
+                assert album is not None
+                album_track_ids = {t.track_id for t in album.tracks}
+                assert album_track_ids.issubset(listened_track_ids)
+
